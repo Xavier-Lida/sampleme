@@ -1,0 +1,23 @@
+{
+  "id": "mock-twinkle",
+  "title": "Ah! vous dirai-je, maman",
+  "bpm": 120,
+  "timeSignature": { "beats": 4, "beatType": 4 },
+  "key": "C major",
+  "notes": [
+    { "pitch": "C4", "start": 0, "duration": 1 },
+    { "pitch": "C4", "start": 1, "duration": 1 },
+    { "pitch": "G4", "start": 2, "duration": 1 },
+    { "pitch": "G4", "start": 3, "duration": 1 },
+    { "pitch": "A4", "start": 4, "duration": 1 },
+    { "pitch": "A4", "start": 5, "duration": 1 },
+    { "pitch": "G4", "start": 6, "duration": 2 },
+    { "pitch": "F4", "start": 8, "duration": 1 },
+    { "pitch": "F4", "start": 9, "duration": 1 },
+    { "pitch": "E4", "start": 10, "duration": 1 },
+    { "pitch": "E4", "start": 11, "duration": 1 },
+    { "pitch": "D4", "start": 12, "duration": 1 },
+    { "pitch": "D4", "start": 13, "duration": 1 },
+    { "pitch": "C4", "start": 14, "duration": 2 }
+  ]
+}
