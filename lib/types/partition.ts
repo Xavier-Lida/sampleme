@@ -5,12 +5,15 @@ export interface PartitionResponse {
   timeSignature: { beats: number; beatType: number };
   key?: string;
   notes: PartitionNote[];
+  /** When true, applies subtle timing jitter during playback (demo/mock). */
+  playbackHumanize?: boolean;
 }
 
 export interface PartitionNote {
   pitch: string;
   start: number;
   duration: number;
+  velocity?: number;
 }
 
 export function getBeatsPerMeasure(partition: PartitionResponse): number {

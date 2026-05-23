@@ -30,6 +30,8 @@ export function usePartitionPlayer(partition: PartitionResponse | null) {
   const [progress, setProgress] = useState(0);
   const [isInstrumentLoading, setIsInstrumentLoading] = useState(true);
   const [isInstrumentReady, setIsInstrumentReady] = useState(false);
+  const [bpmOverride, setBpmOverride] = useState<number | null>(null);
+  const effectiveBpm = bpmOverride ?? partition?.bpm ?? 120;
 
   const instrumentRef = useRef<PartitionInstrument | null>(null);
   const eventIdsRef = useRef<number[]>([]);
@@ -74,12 +76,13 @@ export function usePartitionPlayer(partition: PartitionResponse | null) {
     clearTransport(eventIdsRef.current, instrumentRef.current);
     eventIdsRef.current = [];
 
-    durationRef.current = getPlaybackDurationSeconds(partition);
+    durationRef.current = getPlaybackDurationSeconds(partition, effectiveBpm);
     eventIdsRef.current = schedulePartitionOnTransport(
       partition,
       instrumentRef.current,
+      { bpm: effectiveBpm },
     );
-  }, [partition]);
+  }, [partition, effectiveBpm]);
 
   useEffect(() => {
     let cancelled = false;
@@ -134,6 +137,23 @@ export function usePartitionPlayer(partition: PartitionResponse | null) {
     resetPlaybackState();
   }, [resetPlaybackState, setupTransport]);
 
+  const adjustBpm = useCallback(
+    (delta: number) => {
+      setBpmOverride((current) => {
+        const base = current ?? partition?.bpm ?? 120;
+        return Math.min(240, Math.max(40, base + delta));
+      });
+    },
+    [partition?.bpm],
+  );
+
+  const setBpm = useCallback(
+    (bpm: number) => {
+      setBpmOverride(Math.min(240, Math.max(40, bpm)));
+    },
+    [],
+  );
+
   return {
     isPlaying,
     progress,
@@ -142,6 +162,11 @@ export function usePartitionPlayer(partition: PartitionResponse | null) {
     stop,
     isInstrumentLoading,
     isInstrumentReady,
-    durationSeconds: partition ? getPlaybackDurationSeconds(partition) : 0,
+    effectiveBpm,
+    adjustBpm,
+    setBpm,
+    durationSeconds: partition
+      ? getPlaybackDurationSeconds(partition, effectiveBpm)
+      : 0,
   };
 }

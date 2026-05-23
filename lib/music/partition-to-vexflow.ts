@@ -4,10 +4,13 @@ import {
   Formatter,
   Renderer,
   Stave,
-  StaveNote,
   StaveTie,
   Voice,
 } from "vexflow";
+import {
+  buildMeasureTickables,
+  mapNoteIndexToTickable,
+} from "@/lib/music/measure-tickables";
 import {
   findSlurPairs,
   findTieGroups,
@@ -17,31 +20,6 @@ import {
   type PartitionNote,
   type PartitionResponse,
 } from "@/lib/types/partition";
-
-const DURATION_MAP: Record<number, string> = {
-  0.25: "16",
-  0.5: "8",
-  1: "q",
-  2: "h",
-  4: "w",
-};
-
-function beatsToVexDuration(duration: number): string {
-  if (DURATION_MAP[duration]) return DURATION_MAP[duration];
-  if (duration < 1) return "16";
-  if (duration < 2) return "q";
-  if (duration < 4) return "h";
-  return "w";
-}
-
-function pitchToVexKey(pitch: string): string {
-  const match = pitch.match(/^([A-Ga-g])([#b]?)(\d)$/);
-  if (!match) return "c/4";
-  const [, letter, accidental, octave] = match;
-  const note = letter.toLowerCase();
-  const acc = accidental === "#" ? "#" : accidental === "b" ? "b" : "";
-  return `${note}${acc}/${octave}`;
-}
 
 function groupNotesByMeasure(
   notes: PartitionNote[],
@@ -97,13 +75,10 @@ export function renderPartitionToElement(
     }
     stave.setContext(context).draw();
 
-    const tickables = measureNotes.map((note) => {
-      return new StaveNote({
-        keys: [pitchToVexKey(note.pitch)],
-        duration: beatsToVexDuration(note.duration),
-        autoStem: true,
-      });
-    });
+    const { tickables, noteIndexByTickable } = buildMeasureTickables(
+      measureNotes,
+      beatsPerMeasure,
+    );
 
     if (tickables.length === 0) return;
 
@@ -125,10 +100,13 @@ export function renderPartitionToElement(
       beam.setContext(context).draw();
     }
 
+    const toTickable = (noteIndex: number) =>
+      tickables[mapNoteIndexToTickable(noteIndex, noteIndexByTickable)];
+
     for (const group of findTieGroups(measureNotes)) {
       new StaveTie({
-        firstNote: tickables[group.startIndex],
-        lastNote: tickables[group.endIndex],
+        firstNote: toTickable(group.startIndex),
+        lastNote: toTickable(group.endIndex),
         firstIndexes: [0],
         lastIndexes: [0],
       })
@@ -137,7 +115,7 @@ export function renderPartitionToElement(
     }
 
     for (const pair of findSlurPairs(measureNotes)) {
-      new Curve(tickables[pair.fromIndex], tickables[pair.toIndex], {
+      new Curve(toTickable(pair.fromIndex), toTickable(pair.toIndex), {
         openingDirection: "auto",
       })
         .setContext(context)

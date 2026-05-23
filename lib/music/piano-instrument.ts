@@ -1,4 +1,5 @@
 import * as Tone from "tone";
+import { normalizePitchForTone } from "@/lib/music/pitch";
 
 const SALAMANDER_BASE_URL = "https://tonejs.github.io/audio/salamander/";
 
@@ -42,6 +43,8 @@ export interface PartitionInstrument {
     time?: number,
     velocity?: number,
   ): void;
+  triggerAttack(pitch: string, time?: number, velocity?: number): void;
+  triggerRelease(pitch: string, time?: number): void;
   releaseAll(): void;
   dispose(): void;
 }
@@ -49,19 +52,59 @@ export interface PartitionInstrument {
 let instrumentPromise: Promise<PartitionInstrument> | null = null;
 let cachedInstrument: PartitionInstrument | null = null;
 
+type PitchCapableSynth = {
+  triggerAttack: (
+    pitch: string,
+    time?: number,
+    velocity?: number,
+  ) => void;
+  triggerRelease: (pitch: string, time?: number) => void;
+  triggerAttackRelease: (
+    pitch: string,
+    duration: number,
+    time?: number,
+    velocity?: number,
+  ) => void;
+  releaseAll: () => void;
+};
+
+function wrapWithPitchNormalization(
+  source: PitchCapableSynth,
+): Pick<
+  PartitionInstrument,
+  "triggerAttack" | "triggerRelease" | "triggerAttackRelease" | "releaseAll"
+> {
+  return {
+    triggerAttack(pitch, time, velocity) {
+      source.triggerAttack(normalizePitchForTone(pitch), time, velocity);
+    },
+    triggerRelease(pitch, time) {
+      source.triggerRelease(normalizePitchForTone(pitch), time);
+    },
+    triggerAttackRelease(pitch, duration, time, velocity) {
+      source.triggerAttackRelease(
+        normalizePitchForTone(pitch),
+        duration,
+        time,
+        velocity,
+      );
+    },
+    releaseAll() {
+      source.releaseAll();
+    },
+  };
+}
+
 function createFallbackInstrument(): PartitionInstrument {
   const synth = new Tone.PolySynth(Tone.Synth, {
     oscillator: { type: "triangle" },
     envelope: { attack: 0.02, decay: 0.1, sustain: 0.3, release: 0.4 },
   }).toDestination();
 
+  const wrapped = wrapWithPitchNormalization(synth);
+
   return {
-    triggerAttackRelease(pitch, duration, time, velocity) {
-      synth.triggerAttackRelease(pitch, duration, time, velocity);
-    },
-    releaseAll() {
-      synth.releaseAll();
-    },
+    ...wrapped,
     dispose() {
       synth.dispose();
     },
@@ -82,13 +125,10 @@ async function loadSamplerInstrument(): Promise<PartitionInstrument> {
 
   await Tone.loaded();
 
+  const wrapped = wrapWithPitchNormalization(sampler);
+
   return {
-    triggerAttackRelease(pitch, duration, time, velocity) {
-      sampler.triggerAttackRelease(pitch, duration, time, velocity);
-    },
-    releaseAll() {
-      sampler.releaseAll();
-    },
+    ...wrapped,
     dispose() {
       sampler.dispose();
       reverb.dispose();

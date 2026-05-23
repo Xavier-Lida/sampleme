@@ -1,11 +1,13 @@
 import { TranscribeError } from "@/lib/api/errors";
+import { normalizePitchForTone } from "@/lib/music/pitch";
 import type {
+  MusicalNote,
   MusicalNoteDuration,
   TranscriptionResponse,
 } from "@/lib/types/api";
 import type { PartitionNote, PartitionResponse } from "@/lib/types/partition";
 
-const BACKEND_BPM = 120;
+const DEFAULT_BPM = 120;
 
 const VEX_DURATION_TO_BEATS: Record<MusicalNoteDuration, number> = {
   w: 4,
@@ -23,6 +25,20 @@ function isRestNote(note: { pitch: string; isRest: boolean }): boolean {
   return note.isRest || note.pitch === "rest";
 }
 
+function noteStartBeat(
+  note: MusicalNote,
+  sequentialStart: number,
+  bpm: number,
+): number {
+  if (note.startBeat !== undefined) {
+    return note.startBeat;
+  }
+  if (note.onsetSec !== undefined) {
+    return (note.onsetSec * bpm) / 60;
+  }
+  return sequentialStart;
+}
+
 export function transcriptionResponseToPartition(
   response: TranscriptionResponse,
 ): PartitionResponse {
@@ -38,23 +54,35 @@ export function transcriptionResponseToPartition(
     );
   }
 
+  const bpm = response.bpm ?? DEFAULT_BPM;
   const notes: PartitionNote[] = [];
-  let start = 0;
+  let sequentialStart = 0;
+  const hasExplicitTiming = response.data.some(
+    (note) => note.startBeat !== undefined || note.onsetSec !== undefined,
+  );
 
   for (const note of response.data) {
     const duration = vexDurationToBeats(note.duration);
 
     if (isRestNote(note)) {
-      start += duration;
+      if (!hasExplicitTiming) {
+        sequentialStart += duration;
+      }
       continue;
     }
 
+    const start = noteStartBeat(note, sequentialStart, bpm);
+
     notes.push({
-      pitch: note.pitch,
+      pitch: normalizePitchForTone(note.pitch),
       start,
       duration,
+      velocity: note.velocity,
     });
-    start += duration;
+
+    if (!hasExplicitTiming) {
+      sequentialStart += duration;
+    }
   }
 
   if (notes.length === 0) {
@@ -63,11 +91,17 @@ export function transcriptionResponseToPartition(
     );
   }
 
+  if (hasExplicitTiming) {
+    notes.sort((a, b) => a.start - b.start);
+  }
+
   return {
     id: crypto.randomUUID(),
     title: "Transcription",
-    bpm: BACKEND_BPM,
-    timeSignature: { beats: 4, beatType: 4 },
+    bpm,
+    timeSignature: response.timeSignature ?? { beats: 4, beatType: 4 },
+    key: response.key,
     notes,
+    playbackHumanize: false,
   };
 }

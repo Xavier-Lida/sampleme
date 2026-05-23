@@ -4,6 +4,7 @@
   "bpm": 120,
   "timeSignature": { "beats": 4, "beatType": 4 },
   "key": "C major",
+  "playbackHumanize": true,
   "notes": [
     { "pitch": "C4", "start": 0, "duration": 1 },
     { "pitch": "C4", "start": 1, "duration": 1 },

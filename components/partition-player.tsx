@@ -1,6 +1,6 @@
 "use client";
 
-import { Pause, Play, Stop } from "@phosphor-icons/react";
+import { Minus, Pause, Play, Plus, Stop } from "@phosphor-icons/react";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -25,6 +25,9 @@ export function PartitionPlayer({ partition }: PartitionPlayerProps) {
     pause,
     stop,
     isInstrumentLoading,
+    effectiveBpm,
+    adjustBpm,
+    setBpm,
   } = usePartitionPlayer(partition);
 
   const handlePlayPause = () => {
@@ -40,11 +43,52 @@ export function PartitionPlayer({ partition }: PartitionPlayerProps) {
       <CardHeader>
         <CardTitle>Lecteur</CardTitle>
         <CardDescription>
-          Écoutez la partition générée ({partition.bpm} BPM).
+          Écoutez la partition générée. Tempo : {effectiveBpm} BPM
+          {effectiveBpm !== partition.bpm
+            ? ` (original ${partition.bpm})`
+            : ""}
+          .
         </CardDescription>
       </CardHeader>
       <CardContent className="flex flex-col gap-4">
         <Progress value={progress * 100} className="h-2" />
+
+        <div className="flex items-center justify-between gap-2">
+          <span className="text-muted-foreground text-sm">Tempo</span>
+          <div className="flex items-center gap-1">
+            <Button
+              type="button"
+              variant="outline"
+              size="icon-sm"
+              onClick={() => adjustBpm(-5)}
+              disabled={isInstrumentLoading || effectiveBpm <= 40}
+              aria-label="Diminuer le tempo de 5 BPM"
+            >
+              <Minus className="size-4" />
+            </Button>
+            <input
+              type="range"
+              min={40}
+              max={240}
+              step={1}
+              value={effectiveBpm}
+              onChange={(e) => setBpm(Number(e.target.value))}
+              disabled={isInstrumentLoading}
+              className="w-32 accent-primary"
+              aria-label="Tempo en BPM"
+            />
+            <Button
+              type="button"
+              variant="outline"
+              size="icon-sm"
+              onClick={() => adjustBpm(5)}
+              disabled={isInstrumentLoading || effectiveBpm >= 240}
+              aria-label="Augmenter le tempo de 5 BPM"
+            >
+              <Plus className="size-4" />
+            </Button>
+          </div>
+        </div>
 
         {isInstrumentLoading ? (
           <p className="text-muted-foreground text-sm">
