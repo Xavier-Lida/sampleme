@@ -19,7 +19,7 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 
-const TRACK_LABEL_WIDTH = 140;
+const TRACK_LABEL_WIDTH = 180;
 const TRACK_HEIGHT = 64;
 const PIXELS_PER_SECOND = 80;
 const MEASURE_SECONDS = (60 / FIXED_BPM) * 4;
