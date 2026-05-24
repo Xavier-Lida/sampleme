@@ -128,26 +128,13 @@ export function TrackWorkspace({
           busy={busy}
           playing={playing}
           instrument={instrument}
-          activePreset={activePreset}
-          presetPickerDisabled={presetPickerDisabled}
-          recleanupAvailable={recleanupAvailable}
           hasResult={hasResult}
           hasNotes={notes.length > 0}
-          hasRecording={hasRecording}
-          hasSelectedNote={selectedIndex !== null}
-          notesEdited={!!notesEdited}
           onStartRecording={onStartRecording}
           onStopRecording={onStopRecording}
           onUploadAudio={onUploadAudio}
           onInstrumentChange={onInstrumentChange}
-          onPresetChange={onPresetChange}
-          onDeleteSelected={onDeleteSelected}
-          onResetNotes={onResetNotes}
-          onDownloadMidi={onDownloadMidi}
-          onDownloadRecording={onDownloadRecording}
           onClearNotes={onClearNotes}
-          onClearSession={onClearSession}
-          onOpenNoteEditor={onOpenNoteEditor}
         />
 
         <AudioTimeline

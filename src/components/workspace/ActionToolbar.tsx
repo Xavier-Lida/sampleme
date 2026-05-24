@@ -2,26 +2,12 @@
 
 import { useRef } from 'react';
 import {
-  DotsThreeOutlineIcon,
   FileArrowUpIcon,
   MicrophoneIcon,
   StopIcon,
   TrashIcon,
 } from '@phosphor-icons/react';
 import { Button } from '@/components/ui/button';
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuGroup,
-  DropdownMenuItem,
-  DropdownMenuRadioGroup,
-  DropdownMenuRadioItem,
-  DropdownMenuSeparator,
-  DropdownMenuSub,
-  DropdownMenuSubContent,
-  DropdownMenuSubTrigger,
-  DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
 import {
   Select,
   SelectContent,
@@ -35,16 +21,9 @@ import {
   getInstrumentLabel,
   type PlaybackInstrumentId,
 } from '@/lib/music/partition-instruments';
-import type { CleanupPreset } from '@/types/transcription';
 import { cn } from '@/lib/utils';
 
 const INSTRUMENT_OPTIONS: readonly PlaybackInstrumentId[] = ['piano', 'guitar-acoustic'];
-
-const PRESET_OPTIONS: readonly { id: CleanupPreset; label: string }[] = [
-  { id: 'beginner', label: 'Débutant' },
-  { id: 'standard', label: 'Standard' },
-  { id: 'expert', label: 'Expert' },
-];
 
 interface ActionToolbarProps {
   className?: string;
@@ -53,26 +32,13 @@ interface ActionToolbarProps {
   busy: boolean;
   playing: boolean;
   instrument: PlaybackInstrumentId;
-  activePreset: CleanupPreset;
-  presetPickerDisabled: boolean;
-  recleanupAvailable: boolean;
   hasResult: boolean;
   hasNotes: boolean;
-  hasRecording: boolean;
-  hasSelectedNote: boolean;
-  notesEdited: boolean;
   onStartRecording: () => void;
   onStopRecording: () => void;
   onUploadAudio: (file: File) => void;
   onInstrumentChange: (id: PlaybackInstrumentId) => void;
-  onPresetChange: (preset: CleanupPreset) => void;
-  onDeleteSelected: () => void;
-  onResetNotes: () => void;
-  onDownloadMidi: () => void;
-  onDownloadRecording: () => void;
   onClearNotes: () => void;
-  onClearSession: () => void;
-  onOpenNoteEditor: () => void;
 }
 
 export function ActionToolbar({
@@ -82,26 +48,13 @@ export function ActionToolbar({
   busy,
   playing,
   instrument,
-  activePreset,
-  presetPickerDisabled,
-  recleanupAvailable,
   hasResult,
   hasNotes,
-  hasRecording,
-  hasSelectedNote,
-  notesEdited,
   onStartRecording,
   onStopRecording,
   onUploadAudio,
   onInstrumentChange,
-  onPresetChange,
-  onDeleteSelected,
-  onResetNotes,
-  onDownloadMidi,
-  onDownloadRecording,
   onClearNotes,
-  onClearSession,
-  onOpenNoteEditor,
 }: ActionToolbarProps) {
   const audioInputRef = useRef<HTMLInputElement>(null);
 
@@ -128,7 +81,8 @@ export function ActionToolbar({
     <div className={cn('daw-track-toolbar', className)}>
       <div className="daw-track-toolbar-label">Pistes</div>
 
-      <div className="flex items-center gap-2">
+      {/* Centered actions container */}
+      <div className="flex flex-1 items-center justify-center gap-3">
         {!isRecording ? (
           <Button
             size="sm"
@@ -201,92 +155,6 @@ export function ActionToolbar({
           <TrashIcon className="size-4" />
           Clear track
         </Button>
-
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button
-              variant="outline"
-              size="sm"
-              className="h-8 w-8 p-0 border-border bg-secondary text-muted-foreground hover:text-foreground"
-              aria-label="Plus d'actions"
-            >
-              <DotsThreeOutlineIcon className="size-5" />
-            </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent
-            align="end"
-            side="top"
-            sideOffset={8}
-            collisionPadding={12}
-            className="z-[100] w-56 min-w-48 bg-card border-border"
-          >
-            <DropdownMenuGroup>
-              <DropdownMenuItem
-                disabled={!hasSelectedNote || playing}
-                onClick={onDeleteSelected}
-                title="Sélectionnez une note sur la portée, puis Suppr"
-                className="text-xs cursor-pointer"
-              >
-                Supprimer la note sélectionnée
-              </DropdownMenuItem>
-              <DropdownMenuItem
-                disabled={!notesEdited || playing}
-                onClick={onResetNotes}
-                className="text-xs cursor-pointer"
-              >
-                Réinitialiser les notes
-              </DropdownMenuItem>
-              <DropdownMenuItem
-                disabled={!hasResult}
-                onClick={onOpenNoteEditor}
-                className="text-xs cursor-pointer"
-              >
-                Éditeur de notes
-              </DropdownMenuItem>
-              <DropdownMenuSeparator className="bg-border" />
-              <DropdownMenuItem disabled={!hasNotes} onClick={onDownloadMidi} className="text-xs cursor-pointer">
-                Télécharger MIDI
-              </DropdownMenuItem>
-              <DropdownMenuItem disabled={!hasRecording} onClick={onDownloadRecording} className="text-xs cursor-pointer">
-                Télécharger wav
-              </DropdownMenuItem>
-              <DropdownMenuItem
-                disabled={!hasResult && !hasRecording}
-                onClick={onClearSession}
-                className="text-xs text-red-400 focus:text-red-400 focus:bg-red-500/10 cursor-pointer"
-              >
-                Effacer la session
-              </DropdownMenuItem>
-            </DropdownMenuGroup>
-
-            <DropdownMenuSeparator className="bg-border" />
-
-            <DropdownMenuSub>
-              <DropdownMenuSubTrigger disabled={presetPickerDisabled} className="text-xs cursor-pointer">
-                Preset de nettoyage
-              </DropdownMenuSubTrigger>
-              <DropdownMenuSubContent className="bg-card border-border">
-                <DropdownMenuRadioGroup
-                  value={activePreset}
-                  onValueChange={(value) => onPresetChange(value as CleanupPreset)}
-                >
-                  <DropdownMenuGroup>
-                    {PRESET_OPTIONS.map(({ id, label }) => (
-                      <DropdownMenuRadioItem
-                        key={id}
-                        value={id}
-                        disabled={presetPickerDisabled || !recleanupAvailable}
-                        className="text-xs cursor-pointer"
-                      >
-                        {label}
-                      </DropdownMenuRadioItem>
-                    ))}
-                  </DropdownMenuGroup>
-                </DropdownMenuRadioGroup>
-              </DropdownMenuSubContent>
-            </DropdownMenuSub>
-          </DropdownMenuContent>
-        </DropdownMenu>
       </div>
     </div>
   );
