@@ -47,6 +47,8 @@ import type {
 } from '@/types/transcription';
 import { SIXTEENTH_SECONDS } from '@/types/transcription';
 import type { DisplayNote, SelectedNoteRef } from '@/types/display';
+import { useIsMobile } from '@/hooks/useIsMobile';
+import { MobileApp } from '@/components/mobile/MobileApp';
 
 function buildDisplayNotes(tracks: CachedTrack[]): DisplayNote[] {
   const all: DisplayNote[] = [];
@@ -69,6 +71,12 @@ function buildDisplayNotes(tracks: CachedTrack[]): DisplayNote[] {
 }
 
 export default function Page() {
+  const isMobile = useIsMobile();
+  if (isMobile) return <MobileApp />;
+  return <DesktopPage />;
+}
+
+function DesktopPage() {
   const { start, stop, status, error, isRecording, analyserRef } = useAudioRecorder({ click: true });
   const { metadata, updateField } = useProjectMetadata();
   const [busy, setBusy] = useState(false);
