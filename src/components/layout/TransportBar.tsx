@@ -16,6 +16,16 @@ interface TransportBarProps {
   onTogglePlayPause: () => void;
   onSkipBack: () => void;
   onSkipForward: () => void;
+  /** mm:ss display */
+  currentTime?: number;
+  statusLabel?: string;
+  statusClass?: string;
+}
+
+function fmt(seconds: number): string {
+  const m = Math.floor(seconds / 60);
+  const s = Math.floor(seconds % 60);
+  return `${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
 }
 
 export function TransportBar({
@@ -25,43 +35,53 @@ export function TransportBar({
   onTogglePlayPause,
   onSkipBack,
   onSkipForward,
+  currentTime = 0,
+  statusLabel = 'Prêt',
+  statusClass = '',
 }: TransportBarProps) {
   return (
-    <footer
-      className={cn(
-        'flex h-16 shrink-0 items-center justify-center gap-2 border-t border-border bg-background/95 px-4 backdrop-blur supports-[backdrop-filter]:bg-background/80 sm:gap-3',
-        className,
-      )}
-    >
+    <footer className={cn('daw-footer', className)}>
       <Button
         variant="outline"
-        size="icon-lg"
+        size="icon"
         aria-label="Reculer"
         disabled={disabled}
         onClick={onSkipBack}
+        className="size-9 rounded-full border-border/60 bg-secondary text-muted-foreground hover:text-foreground"
       >
         <CaretDoubleLeftIcon />
       </Button>
 
       <Button
-        size="icon-lg"
+        size="icon"
         aria-label={isPlaying ? 'Pause' : 'Lecture'}
         disabled={disabled}
         onClick={onTogglePlayPause}
-        className="size-11"
+        className="size-11 rounded-full shadow-lg shadow-primary/30"
       >
-        {isPlaying ? <PauseIcon /> : <PlayIcon />}
+        {isPlaying ? <PauseIcon size={20} /> : <PlayIcon size={20} />}
       </Button>
 
       <Button
         variant="outline"
-        size="icon-lg"
+        size="icon"
         aria-label="Avancer"
         disabled={disabled}
         onClick={onSkipForward}
+        className="size-9 rounded-full border-border/60 bg-secondary text-muted-foreground hover:text-foreground"
       >
         <CaretDoubleRightIcon />
       </Button>
+
+      <span className="transport-time" aria-live="polite">
+        {fmt(currentTime)}
+      </span>
+
+      {/* Status */}
+      <div className="daw-footer-status" aria-live="polite">
+        <span className={cn('status-pip', statusClass)} aria-hidden="true" />
+        {statusLabel}
+      </div>
     </footer>
   );
 }

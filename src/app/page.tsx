@@ -69,8 +69,18 @@ export default function Page() {
   const notes = result?.notes ?? EMPTY_NOTES;
   const activePreset = cleanupOptions.preset ?? 'standard';
 
+  // Playback uses raw_notes (matches Spotify demo quality) until the user
+  // edits a note — once they touch the sheet, playback follows their edits.
+  const originalSnapshot = originalNotesRef.current;
+  const playbackEdited = !!(
+    result && originalSnapshot &&
+    JSON.stringify(result.notes) !== JSON.stringify(originalSnapshot)
+  );
+  const playbackNotes =
+    playbackEdited || !result?.raw_notes ? notes : result.raw_notes;
+
   const playback = useMelodyPlayback({
-    notes,
+    notes: playbackNotes,
     instrument,
     audioDuration,
   });
@@ -324,13 +334,24 @@ export default function Page() {
     URL.revokeObjectURL(url);
   }
 
-  const notesEdited =
-    result &&
-    originalNotesRef.current &&
-    JSON.stringify(result.notes) !== JSON.stringify(originalNotesRef.current);
+  // playbackEdited (computed above) doubles as notesEdited for UI props.
+  const notesEdited = playbackEdited;
 
   const presetPickerDisabled = !recleanupAvailable || busy || isRecording || playback.isPlaying;
   const transportDisabled = busy || isRecording || notes.length === 0;
+
+  let statusLabel = 'Prêt';
+  let statusClass = '';
+  if (isRecording) {
+    statusLabel = 'Enregistrement';
+    statusClass = 'recording';
+  } else if (playback.isPlaying) {
+    statusLabel = 'Lecture';
+    statusClass = 'playing';
+  } else if (busy) {
+    statusLabel = 'Transcription';
+    statusClass = 'busy';
+  }
 
   return (
     <AppShell
@@ -343,6 +364,9 @@ export default function Page() {
         onTogglePlayPause: () => playback.togglePlayPause(),
         onSkipBack: () => playback.skipBack(),
         onSkipForward: () => playback.skipForward(),
+        currentTime: playback.currentTime,
+        statusLabel,
+        statusClass,
       }}
     >
       {sessionRestored && !recleanupAvailable && result && (

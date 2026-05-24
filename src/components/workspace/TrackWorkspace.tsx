@@ -2,12 +2,12 @@
 
 import dynamic from 'next/dynamic';
 import { useEffect, useRef, useState } from 'react';
-import { Card, CardContent } from '@/components/ui/card';
 import { AudioTimeline } from '@/components/timeline/AudioTimeline';
 import { ActionToolbar } from '@/components/workspace/ActionToolbar';
 import type { PlaybackInstrumentId } from '@/lib/music/partition-instruments';
 import type { CleanupPreset, Note } from '@/types/transcription';
 import { cn } from '@/lib/utils';
+import { Spinner } from '@/components/ui/spinner';
 
 const SheetMusicRenderer = dynamic(() => import('@/components/SheetMusicRenderer'), {
   ssr: false,
@@ -99,37 +99,11 @@ export function TrackWorkspace({
   }, []);
 
   return (
-    <div className={cn('flex min-w-0 flex-1 flex-col gap-4', className)}>
-      <ActionToolbar
-        isRecording={isRecording}
-        isRequestingMic={isRequestingMic}
-        busy={busy}
-        playing={playing}
-        instrument={instrument}
-        activePreset={activePreset}
-        presetPickerDisabled={presetPickerDisabled}
-        recleanupAvailable={recleanupAvailable}
-        hasResult={hasResult}
-        hasNotes={notes.length > 0}
-        hasRecording={hasRecording}
-        hasSelectedNote={selectedIndex !== null}
-        notesEdited={!!notesEdited}
-        onStartRecording={onStartRecording}
-        onStopRecording={onStopRecording}
-        onUploadAudio={onUploadAudio}
-        onInstrumentChange={onInstrumentChange}
-        onPresetChange={onPresetChange}
-        onDeleteSelected={onDeleteSelected}
-        onResetNotes={onResetNotes}
-        onDownloadMidi={onDownloadMidi}
-        onDownloadRecording={onDownloadRecording}
-        onClearSession={onClearSession}
-        onOpenNoteEditor={onOpenNoteEditor}
-      />
-
-      <div ref={sheetContainerRef} className="min-w-0">
-        <Card className="overflow-hidden">
-          <CardContent className="overflow-x-auto bg-white p-4">
+    <div className={cn('flex flex-col flex-1 h-full overflow-hidden', className)}>
+      {/* 1. Sheet Music / Partition Pane at the top */}
+      <div ref={sheetContainerRef} className="daw-sheet-section">
+        <div className="daw-sheet-inner">
+          <div className="daw-sheet-frame p-4">
             <SheetMusicRenderer
               notes={notes}
               width={sheetWidth}
@@ -137,16 +111,56 @@ export function TrackWorkspace({
               onNoteSelect={onNoteSelect}
               onStaffClick={hasResult ? onStaffClick : undefined}
             />
-          </CardContent>
-        </Card>
+          </div>
+        </div>
       </div>
 
-      <AudioTimeline
-        peaks={peaks}
-        duration={duration}
-        currentTime={currentTime}
-        onSeek={onSeek}
-      />
+      {/* 2. Track & Audio Timeline Lanes at the bottom */}
+      <div className="daw-track-section">
+        <ActionToolbar
+          isRecording={isRecording}
+          isRequestingMic={isRequestingMic}
+          busy={busy}
+          playing={playing}
+          instrument={instrument}
+          activePreset={activePreset}
+          presetPickerDisabled={presetPickerDisabled}
+          recleanupAvailable={recleanupAvailable}
+          hasResult={hasResult}
+          hasNotes={notes.length > 0}
+          hasRecording={hasRecording}
+          hasSelectedNote={selectedIndex !== null}
+          notesEdited={!!notesEdited}
+          onStartRecording={onStartRecording}
+          onStopRecording={onStopRecording}
+          onUploadAudio={onUploadAudio}
+          onInstrumentChange={onInstrumentChange}
+          onPresetChange={onPresetChange}
+          onDeleteSelected={onDeleteSelected}
+          onResetNotes={onResetNotes}
+          onDownloadMidi={onDownloadMidi}
+          onDownloadRecording={onDownloadRecording}
+          onClearSession={onClearSession}
+          onOpenNoteEditor={onOpenNoteEditor}
+        />
+
+        <AudioTimeline
+          peaks={peaks}
+          duration={duration}
+          currentTime={currentTime}
+          notes={notes}
+          onSeek={onSeek}
+        />
+
+        {busy && (
+          <div className="absolute inset-0 bg-background/50 backdrop-blur-[1px] flex items-center justify-center z-30">
+            <div className="bg-card border border-border p-4 rounded-md shadow-md flex items-center gap-3">
+              <Spinner className="size-5" />
+              <span className="text-sm font-medium">Transcription en cours…</span>
+            </div>
+          </div>
+        )}
+      </div>
     </div>
   );
 }

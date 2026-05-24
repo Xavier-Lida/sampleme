@@ -9,8 +9,8 @@ import { TooltipProvider } from '@/components/ui/tooltip';
 const jetbrainsMono = JetBrains_Mono({ subsets: ['latin'], variable: '--font-mono' });
 
 export const metadata: Metadata = {
-  title: 'MusicMe — hum to sheet music',
-  description: 'Real-time humming-to-sheet-music transcription locked at 120 BPM.',
+  title: 'MusicMe — Fredonnez, transcrivez, composez',
+  description: 'Transcription en temps réel de votre voix en partition musicale, quantifiée à 120 BPM.',
 };
 
 export const viewport: Viewport = {
@@ -21,7 +21,7 @@ export const viewport: Viewport = {
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="fr" className={cn('dark font-mono', jetbrainsMono.variable)} suppressHydrationWarning>
-      <body>
+      <body className="app-shell">
         <ThemeProvider attribute="class" defaultTheme="dark" enableSystem={false}>
           <TooltipProvider>
             {children}

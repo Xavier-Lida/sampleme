@@ -5,10 +5,8 @@ import {
   DotsThreeOutlineIcon,
   FileArrowUpIcon,
   MicrophoneIcon,
-  MusicNotesIcon,
   StopIcon,
 } from '@phosphor-icons/react';
-import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import {
   DropdownMenu,
@@ -104,12 +102,6 @@ export function ActionToolbar({
 }: ActionToolbarProps) {
   const audioInputRef = useRef<HTMLInputElement>(null);
 
-  function handlePartitionUploadClick() {
-    toast.info('Bientôt disponible', {
-      description: 'Le téléversement de partition sera ajouté prochainement.',
-    });
-  }
-
   function handleAudioFileChange(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
     if (file) onUploadAudio(file);
@@ -119,34 +111,45 @@ export function ActionToolbar({
   const actionsDisabled = busy || playing || isRecording;
 
   return (
-    <div className={cn('flex flex-col gap-2', className)}>
-      <div className="flex flex-wrap items-center gap-2">
+    <div className={cn('daw-track-toolbar', className)}>
+      <div className="daw-track-toolbar-label">Pistes</div>
+
+      <div className="flex items-center gap-2">
         {!isRecording ? (
           <Button
+            size="sm"
             onClick={onStartRecording}
             disabled={actionsDisabled || isRequestingMic}
+            className="h-8 gap-1.5 bg-red-600/90 hover:bg-red-600 text-white font-medium"
           >
             {isRequestingMic ? (
-              <Spinner data-icon="inline-start" />
+              <Spinner className="size-3.5" />
             ) : (
-              <MicrophoneIcon data-icon="inline-start" />
+              <MicrophoneIcon className="size-4" />
             )}
-            {isRequestingMic ? 'Accès micro…' : 'Enregistrer voix'}
+            {isRequestingMic ? 'Accès…' : 'Enregistrer'}
           </Button>
         ) : (
-          <Button variant="destructive" onClick={onStopRecording}>
-            <StopIcon data-icon="inline-start" />
+          <Button
+            size="sm"
+            variant="destructive"
+            onClick={onStopRecording}
+            className="h-8 gap-1.5 animate-pulse bg-red-500 hover:bg-red-600 text-white font-medium"
+          >
+            <StopIcon className="size-4" />
             Arrêter
           </Button>
         )}
 
         <Button
+          size="sm"
           variant="outline"
           disabled={actionsDisabled}
           onClick={() => audioInputRef.current?.click()}
+          className="h-8 gap-1.5 border-border bg-secondary hover:bg-secondary/80 text-foreground"
         >
-          <FileArrowUpIcon data-icon="inline-start" />
-          Téléverser fichier son
+          <FileArrowUpIcon className="size-4" />
+          Audio
         </Button>
         <input
           ref={audioInputRef}
@@ -156,19 +159,14 @@ export function ActionToolbar({
           onChange={handleAudioFileChange}
         />
 
-        <Button variant="outline" disabled onClick={handlePartitionUploadClick}>
-          <MusicNotesIcon data-icon="inline-start" />
-          Téléverser partition
-        </Button>
-
         <Select
           value={instrument}
           onValueChange={(value) => onInstrumentChange(value as PlaybackInstrumentId)}
         >
-          <SelectTrigger className="w-[120px]">
+          <SelectTrigger className="h-8 w-[100px] border-border bg-secondary text-xs">
             <SelectValue />
           </SelectTrigger>
-          <SelectContent>
+          <SelectContent className="bg-card border-border">
             <SelectGroup>
               {INSTRUMENT_OPTIONS.map((id) => (
                 <SelectItem key={id} value={id}>
@@ -181,49 +179,61 @@ export function ActionToolbar({
 
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <Button variant="ghost" size="icon" aria-label="Plus d'actions">
-              <DotsThreeOutlineIcon />
+            <Button
+              variant="outline"
+              size="sm"
+              className="h-8 w-8 p-0 border-border bg-secondary text-muted-foreground hover:text-foreground"
+              aria-label="Plus d'actions"
+            >
+              <DotsThreeOutlineIcon className="size-5" />
             </Button>
           </DropdownMenuTrigger>
-          <DropdownMenuContent align="end" side="top" sideOffset={8} className="w-56 min-w-48">
+          <DropdownMenuContent align="end" className="w-56 min-w-48 bg-card border-border">
             <DropdownMenuGroup>
               <DropdownMenuItem
                 disabled={!hasSelectedNote || playing}
                 onClick={onDeleteSelected}
+                className="text-xs cursor-pointer"
               >
                 Supprimer la note sélectionnée
               </DropdownMenuItem>
               <DropdownMenuItem
                 disabled={!notesEdited || playing}
                 onClick={onResetNotes}
+                className="text-xs cursor-pointer"
               >
                 Réinitialiser les notes
               </DropdownMenuItem>
-              <DropdownMenuItem disabled={!hasResult} onClick={onOpenNoteEditor}>
+              <DropdownMenuItem
+                disabled={!hasResult}
+                onClick={onOpenNoteEditor}
+                className="text-xs cursor-pointer"
+              >
                 Éditeur de notes
               </DropdownMenuItem>
-              <DropdownMenuSeparator />
-              <DropdownMenuItem disabled={!hasNotes} onClick={onDownloadMidi}>
+              <DropdownMenuSeparator className="bg-border" />
+              <DropdownMenuItem disabled={!hasNotes} onClick={onDownloadMidi} className="text-xs cursor-pointer">
                 Télécharger MIDI
               </DropdownMenuItem>
-              <DropdownMenuItem disabled={!hasRecording} onClick={onDownloadRecording}>
-                Télécharger l&apos;enregistrement (.wav)
+              <DropdownMenuItem disabled={!hasRecording} onClick={onDownloadRecording} className="text-xs cursor-pointer">
+                Télécharger wav
               </DropdownMenuItem>
               <DropdownMenuItem
                 disabled={!hasResult && !hasRecording}
                 onClick={onClearSession}
+                className="text-xs text-red-400 focus:text-red-400 focus:bg-red-500/10 cursor-pointer"
               >
                 Effacer la session
               </DropdownMenuItem>
             </DropdownMenuGroup>
 
-            <DropdownMenuSeparator />
+            <DropdownMenuSeparator className="bg-border" />
 
             <DropdownMenuSub>
-              <DropdownMenuSubTrigger disabled={presetPickerDisabled}>
+              <DropdownMenuSubTrigger disabled={presetPickerDisabled} className="text-xs cursor-pointer">
                 Preset de nettoyage
               </DropdownMenuSubTrigger>
-              <DropdownMenuSubContent>
+              <DropdownMenuSubContent className="bg-card border-border">
                 <DropdownMenuRadioGroup
                   value={activePreset}
                   onValueChange={(value) => onPresetChange(value as CleanupPreset)}
@@ -234,6 +244,7 @@ export function ActionToolbar({
                         key={id}
                         value={id}
                         disabled={presetPickerDisabled || !recleanupAvailable}
+                        className="text-xs cursor-pointer"
                       >
                         {label}
                       </DropdownMenuRadioItem>
@@ -245,16 +256,6 @@ export function ActionToolbar({
           </DropdownMenuContent>
         </DropdownMenu>
       </div>
-
-      {busy && (
-        <p className="flex items-center gap-2 text-xs text-muted-foreground">
-          <Spinner />
-          Transcription en cours…
-        </p>
-      )}
-      {isRecording && (
-        <p className="text-xs text-muted-foreground">Enregistrement avec métronome…</p>
-      )}
     </div>
   );
 }

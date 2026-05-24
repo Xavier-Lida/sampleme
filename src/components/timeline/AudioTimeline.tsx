@@ -3,11 +3,12 @@
 import { useEffect, useMemo, useRef } from 'react';
 import { WaveformTrack } from '@/components/timeline/WaveformTrack';
 import { FIXED_BPM } from '@/types/transcription';
+import type { Note } from '@/types/transcription';
 import { cn } from '@/lib/utils';
 
-const TRACK_LABEL_WIDTH = 72;
-const RULER_HEIGHT = 24;
-const TRACK_HEIGHT = 56;
+const TRACK_LABEL_WIDTH = 80;
+const RULER_HEIGHT = 22;
+const TRACK_HEIGHT = 54;
 const PIXELS_PER_SECOND = 80;
 const MEASURE_SECONDS = (60 / FIXED_BPM) * 4;
 
@@ -15,6 +16,7 @@ interface AudioTimelineProps {
   peaks: number[];
   duration: number;
   currentTime: number;
+  notes?: Note[];
   onSeek?: (seconds: number) => void;
   className?: string;
 }
@@ -29,6 +31,7 @@ export function AudioTimeline({
   peaks,
   duration,
   currentTime,
+  notes = [],
   onSeek,
   className,
 }: AudioTimelineProps) {
@@ -40,7 +43,7 @@ export function AudioTimeline({
     for (let t = 0; t <= duration; t += MEASURE_SECONDS) {
       ticks.push(t);
     }
-    if (ticks[ticks.length - 1] !== duration) {
+    if (ticks.length > 0 && ticks[ticks.length - 1] !== duration) {
       ticks.push(duration);
     }
     return ticks;
@@ -72,59 +75,78 @@ export function AudioTimeline({
   const playheadLeft = currentTime * PIXELS_PER_SECOND;
 
   return (
-    <div className={cn('flex flex-col gap-2', className)}>
-      <div
-        ref={scrollRef}
-        className="overflow-x-auto rounded-none border border-border bg-muted/30"
-      >
-        <div style={{ width: timelineWidth + TRACK_LABEL_WIDTH, minWidth: '100%' }}>
-          <div className="flex border-b border-border">
-            <div
-              className="shrink-0 border-r border-border bg-muted/50"
-              style={{ width: TRACK_LABEL_WIDTH, height: RULER_HEIGHT }}
-            />
-            <div className="relative" style={{ width: timelineWidth, height: RULER_HEIGHT }}>
+    <div className={cn('daw-tracks-viewport border border-border bg-muted/10 flex-1 min-h-[180px]', className)}>
+      <div ref={scrollRef} className="daw-tracks-scroll">
+        <div style={{ width: timelineWidth + TRACK_LABEL_WIDTH, minWidth: '100%', position: 'relative' }}>
+          
+          {/* DAW Ruler (Timeline Bar Headers) */}
+          <div className="daw-ruler">
+            <div className="daw-ruler-label-col" />
+            <div className="daw-ruler-ticks">
               {rulerTicks.map((tick) => (
                 <div
                   key={tick}
-                  className="absolute top-0 flex h-full flex-col justify-end border-l border-border/60 pl-1"
+                  className="daw-ruler-tick"
                   style={{ left: tick * PIXELS_PER_SECOND }}
                 >
-                  <span className="pb-0.5 text-[10px] text-muted-foreground">
-                    {formatTime(tick)}
-                  </span>
+                  <span>{formatTime(tick)}</span>
                 </div>
               ))}
             </div>
           </div>
 
           <div className="relative">
+            {/* Playhead */}
             <div
-              className="pointer-events-none absolute top-0 bottom-0 z-10 w-px bg-primary"
-              style={{ left: TRACK_LABEL_WIDTH + playheadLeft }}
-            />
-            <div
-              className="pointer-events-none absolute top-0 z-10 size-3 -translate-x-1/2 -translate-y-1/2 rotate-45 bg-primary"
+              className="daw-playhead"
               style={{ left: TRACK_LABEL_WIDTH + playheadLeft }}
             />
 
-            <div className="flex border-b border-border">
-              <div
-                className="flex shrink-0 items-center border-r border-border bg-muted/50 px-2 text-xs text-muted-foreground"
-                style={{ width: TRACK_LABEL_WIDTH, height: TRACK_HEIGHT }}
-              >
+            {/* Track 1: Audio Waveform */}
+            <div className="daw-track-row">
+              <div className="daw-track-label">
+                <span className="daw-track-dot bg-cyan-400" />
                 Audio
               </div>
               <div
-                className="relative cursor-pointer"
-                style={{ width: timelineWidth, height: TRACK_HEIGHT }}
+                className="daw-track-lane"
                 onClick={handleTimelineClick}
                 role="presentation"
               >
                 <WaveformTrack peaks={peaks} width={timelineWidth} height={TRACK_HEIGHT} />
               </div>
             </div>
+
+            {/* Track 2: MIDI Notes representation */}
+            <div className="daw-track-row">
+              <div className="daw-track-label">
+                <span className="daw-track-dot bg-purple-500" />
+                Notes MIDI
+              </div>
+              <div className="daw-track-lane relative" onClick={handleTimelineClick} role="presentation">
+                {notes.map((note, index) => {
+                  const noteLeft = note.start * PIXELS_PER_SECOND;
+                  const noteWidth = (note.end - note.start) * PIXELS_PER_SECOND;
+                  return (
+                    <div
+                      key={index}
+                      className="daw-track-clip bg-purple-500/40 border border-purple-500/60"
+                      style={{
+                        left: noteLeft,
+                        width: Math.max(12, noteWidth),
+                      }}
+                    >
+                      {note.pitch}
+                    </div>
+                  );
+                })}
+                {notes.length === 0 && (
+                  <div className="daw-track-empty">Aucune note transcrite</div>
+                )}
+              </div>
+            </div>
           </div>
+
         </div>
       </div>
     </div>

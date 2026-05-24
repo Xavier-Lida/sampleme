@@ -11,26 +11,33 @@ import { cn } from '@/lib/utils';
 
 interface AppHeaderProps {
   className?: string;
+  /** Mobile-only: show hamburger menu */
+  onOpenDrawer?: () => void;
+  showMobileMenu?: boolean;
 }
 
-export function AppHeader({ className }: AppHeaderProps) {
+export function AppHeader({ className, onOpenDrawer, showMobileMenu }: AppHeaderProps) {
   return (
-    <header
-      className={cn(
-        'flex h-14 shrink-0 items-center gap-3 border-b border-border bg-background/95 px-4 backdrop-blur supports-[backdrop-filter]:bg-background/80 sm:gap-4 sm:px-6',
-        className,
+    <header className={cn('daw-header', className)}>
+      {showMobileMenu && (
+        <button
+          className="mr-1 flex h-8 w-8 shrink-0 items-center justify-center rounded text-muted-foreground hover:text-foreground"
+          onClick={onOpenDrawer}
+          aria-label="Menu"
+        >
+          ☰
+        </button>
       )}
-    >
-      <div className="flex min-w-0 flex-1 flex-col gap-0.5 sm:flex-row sm:items-baseline sm:gap-3">
-        <h1 className="shrink-0 text-base font-semibold tracking-tight sm:text-lg">MusicMe</h1>
-        <p className="truncate text-xs text-muted-foreground sm:text-sm">
-          Fredonnez ou importez un audio — obtenez une partition à 120 BPM
-        </p>
-      </div>
+
+      <div className="daw-logo" aria-hidden="true">M</div>
+      <span className="daw-header-title">MusicMe</span>
+      <p className="daw-header-subtitle">
+        Fredonnez ou importez un audio — obtenez une partition à 120 BPM
+      </p>
 
       <Tooltip>
         <TooltipTrigger asChild>
-          <Button variant="ghost" size="icon" aria-label="Réglages">
+          <Button variant="ghost" size="icon" aria-label="Réglages" className="ml-auto shrink-0 text-muted-foreground">
             <GearIcon />
           </Button>
         </TooltipTrigger>
