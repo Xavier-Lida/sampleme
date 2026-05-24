@@ -68,7 +68,7 @@ export default function SheetMusicRenderer({ notes, width = 800, height = 220 }:
     });
 
     try {
-      const voice = new Voice({ numBeats: staveNotes.length, beatValue: 4 }).setStrict(false);
+      const voice = new Voice({ num_beats: staveNotes.length, beat_value: 4 }).setStrict(false);
       voice.addTickables(staveNotes);
       new Formatter().joinVoices([voice]).format([voice], width - 80);
       voice.draw(ctx, stave);
