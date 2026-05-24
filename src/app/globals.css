@@ -120,3 +120,105 @@ button.secondary {
   color: #ff6b6b;
   margin-top: 12px;
 }
+
+.note-editor {
+  margin-top: 24px;
+  padding: 20px;
+  background: var(--muted);
+  border-radius: 12px;
+}
+
+.note-editor-header {
+  margin-bottom: 16px;
+}
+
+.note-editor-header h2 {
+  margin: 0 0 4px;
+  font-size: 18px;
+}
+
+.note-editor-header h3,
+.note-add-form h3 {
+  margin: 0 0 12px;
+  font-size: 16px;
+}
+
+.note-list-wrap {
+  overflow-x: auto;
+  margin-bottom: 20px;
+}
+
+.note-list {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 14px;
+}
+
+.note-list th,
+.note-list td {
+  padding: 8px 12px;
+  text-align: left;
+  border-bottom: 1px solid #3a3d44;
+}
+
+.note-list th {
+  color: #9aa0aa;
+  font-weight: 600;
+}
+
+.note-list tbody tr {
+  cursor: pointer;
+  transition: background 0.15s;
+}
+
+.note-list tbody tr:hover {
+  background: rgba(91, 141, 239, 0.1);
+}
+
+.note-list tbody tr.selected {
+  background: rgba(91, 141, 239, 0.25);
+}
+
+.note-remove {
+  padding: 4px 10px;
+  font-size: 12px;
+  background: #4a3030;
+}
+
+.note-remove:hover:not(:disabled) {
+  background: #6b3030;
+}
+
+.note-add-form {
+  border-top: 1px solid #3a3d44;
+  padding-top: 16px;
+}
+
+.note-add-fields {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  align-items: flex-end;
+}
+
+.note-add-fields label {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-size: 13px;
+  color: #9aa0aa;
+}
+
+.note-add-fields select,
+.note-add-fields input {
+  padding: 8px 10px;
+  border-radius: 6px;
+  border: 1px solid #3a3d44;
+  background: var(--bg);
+  color: var(--fg);
+  font-size: 14px;
+}
+
+.sheet-renderer svg {
+  display: block;
+}
