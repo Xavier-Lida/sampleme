@@ -7,7 +7,6 @@ interface Props {
   active: boolean;
   analyserRef: MutableRefObject<AnalyserNode | null>;
   className?: string;
-  // Number of concentric ripples — each lags slightly behind the previous one.
   rings?: number;
   size?: number;
 }
