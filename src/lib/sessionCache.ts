@@ -1,7 +1,7 @@
 import type { CleanupOptions, Note } from '@/types/transcription';
 import type { PlaybackInstrumentId } from '@/lib/music/partition-instruments';
 
-const DB_NAME = 'musicme';
+const DB_NAME = 'sampleme';
 const DB_VERSION = 1;
 const STORE = 'session';
 const KEY = 'current';

@@ -164,8 +164,11 @@ export function MobileApp() {
     let cancelled = false;
     async function restore() {
       try {
-        if (typeof window !== 'undefined' && window.location.hash) {
-          const shared = decodeShareFromHash(window.location.hash);
+        const hash = typeof window !== 'undefined' ? window.location.hash : '';
+        if (hash && hash.includes('s=')) {
+          // eslint-disable-next-line no-console
+          console.info('[SampleMe] Restoring from share hash', hash.slice(0, 60) + '…');
+          const shared = decodeShareFromHash(hash);
           if (shared && shared.tracks.length > 0) {
             setTracks(shared.tracks);
             (Object.keys(shared.metadata) as Array<keyof typeof shared.metadata>).forEach(
@@ -177,6 +180,11 @@ export function MobileApp() {
             history.replaceState(null, '', window.location.pathname + window.location.search);
             return;
           }
+          // Decode failed or empty payload — let the user know rather than
+          // silently falling through to the idle screen.
+          // eslint-disable-next-line no-console
+          console.warn('[SampleMe] Share decode produced no tracks', { shared });
+          toast.error('Lien de partage invalide ou expiré');
         }
         const cached = await sessionCache.load();
         if (cancelled || !cached?.tracks?.length) return;
@@ -185,6 +193,9 @@ export function MobileApp() {
         setStage('result');
       } catch (e) {
         console.error('Failed to restore mobile session', e);
+        toast.error('Erreur de chargement', {
+          description: e instanceof Error ? e.message : String(e),
+        });
       } finally {
         if (!cancelled) setRestored(true);
       }
@@ -272,25 +283,10 @@ export function MobileApp() {
     if (!activeTrack) return;
     const url = encodeShareUrl(window.location.origin, metadata, [activeTrack]);
     try {
-      // Use native share when available (iOS Safari, Android Chrome).
-      if (navigator.share) {
-        await navigator.share({
-          title: metadata.name || 'Ma mélodie MusicMe',
-          text: 'Écoute ce que je viens de fredonner 🎶',
-          url,
-        });
-      } else {
-        await navigator.clipboard.writeText(url);
-        toast.success('Lien copié');
-      }
+      await navigator.clipboard.writeText(url);
     } catch {
-      // user cancelled or share failed → fall back to copy
-      try {
-        await navigator.clipboard.writeText(url);
-        toast.success('Lien copié');
-      } catch {
-        window.prompt('Copie le lien pour partager :', url);
-      }
+      // Clipboard API blocked (non-https, permissions) → fall back to prompt.
+      window.prompt('Copie le lien :', url);
     }
   }, [activeTrack, metadata]);
 

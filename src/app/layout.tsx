@@ -9,7 +9,7 @@ import { TooltipProvider } from '@/components/ui/tooltip';
 const jetbrainsMono = JetBrains_Mono({ subsets: ['latin'], variable: '--font-mono' });
 
 export const metadata: Metadata = {
-  title: 'MusicMe — Fredonnez, transcrivez, composez',
+  title: 'SampleMe — Fredonnez, transcrivez, composez',
   description: 'Transcription en temps réel de votre voix en partition musicale, quantifiée à 120 BPM.',
 };
 

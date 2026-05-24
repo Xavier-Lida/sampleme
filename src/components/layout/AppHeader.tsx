@@ -36,7 +36,7 @@ export function AppHeader({
       )}
 
       <div className="daw-logo" aria-hidden="true">M</div>
-      <span className="daw-header-title shrink-0">MusicMe</span>
+      <span className="daw-header-title shrink-0">SampleMe</span>
       <span className="text-muted-foreground/40 shrink-0">/</span>
 
       {/* Read-only title display — edit happens in the sidebar's ProjectInfoPanel */}
