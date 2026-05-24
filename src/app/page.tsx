@@ -5,7 +5,16 @@ import dynamic from 'next/dynamic';
 import { useAudioRecorder } from '@/hooks/useAudioRecorder';
 import { exportMidi, transcribeAudio } from '@/lib/api';
 import { blobToWav, playMelody } from '@/lib/audio';
+import {
+  getInstrumentLabel,
+  type PlaybackInstrumentId,
+} from '@/lib/music/partition-instruments';
 import type { TranscriptionResult } from '@/types/transcription';
+
+const INSTRUMENT_OPTIONS: readonly PlaybackInstrumentId[] = [
+  'piano',
+  'guitar-acoustic',
+];
 
 // VexFlow touches the DOM directly — keep it client-only.
 const SheetMusicRenderer = dynamic(() => import('@/components/SheetMusicRenderer'), { ssr: false });
@@ -22,6 +31,7 @@ export default function Page() {
   const [apiError, setApiError] = useState<string | null>(null);
   const [playing, setPlaying] = useState(false);
   const [lastWav, setLastWav] = useState<Blob | null>(null);
+  const [instrument, setInstrument] = useState<PlaybackInstrumentId>('piano');
 
   async function handleStop() {
     const blob = await stop();
@@ -64,7 +74,7 @@ export default function Page() {
     if (!result || result.notes.length === 0) return;
     setPlaying(true);
     try {
-      await playMelody(result.notes);
+      await playMelody(result.notes, instrument);
     } finally {
       setPlaying(false);
     }
@@ -90,8 +100,27 @@ export default function Page() {
           disabled={!result || result.notes.length === 0 || playing}
           className="secondary"
         >
-          {playing ? 'Playing…' : 'Play (piano)'}
+          {playing ? 'Playing…' : `Play (${getInstrumentLabel(instrument)})`}
         </button>
+        <div
+          className="instrument-picker"
+          role="radiogroup"
+          aria-label="Instrument"
+        >
+          {INSTRUMENT_OPTIONS.map((id) => (
+            <button
+              key={id}
+              type="button"
+              role="radio"
+              aria-checked={instrument === id}
+              className={`segment ${instrument === id ? 'active' : ''}`}
+              onClick={() => setInstrument(id)}
+              disabled={playing}
+            >
+              {getInstrumentLabel(id)}
+            </button>
+          ))}
+        </div>
         <button onClick={handleDownloadMidi} disabled={!result || result.notes.length === 0} className="secondary">
           Download MIDI
         </button>

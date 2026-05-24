@@ -67,6 +67,43 @@ button.secondary {
   background: var(--muted);
 }
 
+.instrument-picker {
+  display: inline-flex;
+  border: 1px solid var(--muted);
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.instrument-picker .segment {
+  background: transparent;
+  color: var(--fg);
+  border: 0;
+  border-radius: 0;
+  padding: 8px 14px;
+  font-weight: 600;
+  cursor: pointer;
+  text-transform: capitalize;
+  transition: background 0.15s, color 0.15s;
+}
+
+.instrument-picker .segment + .segment {
+  border-left: 1px solid var(--muted);
+}
+
+.instrument-picker .segment:hover:not(:disabled):not(.active) {
+  background: var(--muted);
+}
+
+.instrument-picker .segment.active {
+  background: var(--accent);
+  color: white;
+}
+
+.instrument-picker .segment:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
 .sheet-frame {
   background: white;
   border-radius: 12px;

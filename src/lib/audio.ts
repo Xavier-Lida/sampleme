@@ -64,77 +64,48 @@ function writeString(view: DataView, offset: number, str: string): void {
 }
 
 import * as Tone from 'tone';
+import {
+  getPartitionInstrument,
+  type PlaybackInstrumentId,
+} from '@/lib/music/partition-instruments';
+import { midiToPitch } from '@/lib/music/pitch';
 
 interface PlayableNote {
   pitch: number;
   start: number;
   end: number;
-}
-
-let sharedSampler: Tone.Sampler | null = null;
-let samplerReady: Promise<Tone.Sampler> | null = null;
-
-/**
- * Load the Salamander Grand Piano sample set from the Tone.js CDN once and
- * reuse the sampler for all subsequent playbacks. Samples are cached by the
- * browser after the first load.
- */
-function getSampler(): Promise<Tone.Sampler> {
-  if (sharedSampler) return Promise.resolve(sharedSampler);
-  if (samplerReady) return samplerReady;
-
-  samplerReady = new Promise((resolve, reject) => {
-    const sampler = new Tone.Sampler({
-      urls: {
-        A0: 'A0.mp3',
-        C1: 'C1.mp3', 'D#1': 'Ds1.mp3', 'F#1': 'Fs1.mp3', A1: 'A1.mp3',
-        C2: 'C2.mp3', 'D#2': 'Ds2.mp3', 'F#2': 'Fs2.mp3', A2: 'A2.mp3',
-        C3: 'C3.mp3', 'D#3': 'Ds3.mp3', 'F#3': 'Fs3.mp3', A3: 'A3.mp3',
-        C4: 'C4.mp3', 'D#4': 'Ds4.mp3', 'F#4': 'Fs4.mp3', A4: 'A4.mp3',
-        C5: 'C5.mp3', 'D#5': 'Ds5.mp3', 'F#5': 'Fs5.mp3', A5: 'A5.mp3',
-        C6: 'C6.mp3', 'D#6': 'Ds6.mp3', 'F#6': 'Fs6.mp3', A6: 'A6.mp3',
-        C7: 'C7.mp3', 'D#7': 'Ds7.mp3', 'F#7': 'Fs7.mp3', A7: 'A7.mp3',
-        C8: 'C8.mp3',
-      },
-      release: 1,
-      baseUrl: 'https://tonejs.github.io/audio/salamander/',
-      onload: () => {
-        sharedSampler = sampler;
-        resolve(sampler);
-      },
-      onerror: (err) => reject(err),
-    }).toDestination();
-  });
-
-  return samplerReady;
-}
-
-const NOTE_NAMES = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B'];
-function midiToNoteName(midi: number): string {
-  return `${NOTE_NAMES[midi % 12]}${Math.floor(midi / 12) - 1}`;
+  velocity?: number;
 }
 
 /**
- * Play a sequence of notes through the Salamander Grand Piano sampler.
- * Resolves when playback finishes so callers can re-enable controls.
+ * Play a sequence of notes through the selected instrument. The instrument is
+ * loaded lazily on first use and cached for subsequent calls, so switching
+ * back and forth between piano and guitar only pays the network cost once per
+ * instrument.
  */
-export async function playMelody(notes: PlayableNote[]): Promise<void> {
+export async function playMelody(
+  notes: PlayableNote[],
+  instrumentId: PlaybackInstrumentId = 'piano',
+): Promise<void> {
   if (notes.length === 0) return;
 
   // Web Audio policies require a user gesture before starting; the click that
   // triggers playMelody satisfies that, but we still need to call start().
   await Tone.start();
-  const sampler = await getSampler();
+  const instrument = await getPartitionInstrument(instrumentId);
 
   const lastEnd = notes[notes.length - 1].end;
   const startAt = Tone.now() + 0.1;
 
   for (const note of notes) {
     const duration = Math.max(0.08, note.end - note.start);
-    sampler.triggerAttackRelease(
-      midiToNoteName(note.pitch),
+    const velocity =
+      typeof note.velocity === 'number' ? note.velocity / 127 : undefined;
+    instrument.triggerAttackRelease(
+      midiToPitch(note.pitch),
       duration,
       startAt + note.start,
+      velocity,
     );
   }
 
@@ -142,4 +113,3 @@ export async function playMelody(notes: PlayableNote[]): Promise<void> {
     setTimeout(resolve, (lastEnd + 0.6) * 1000);
   });
 }
-
