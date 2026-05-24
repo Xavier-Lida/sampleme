@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useCallback, useState } from 'react';
 
 export interface ProjectMetadata {
   name: string;
@@ -20,9 +20,15 @@ export function useProjectMetadata(initial: Partial<ProjectMetadata> = {}) {
     ...initial,
   });
 
-  function updateField<K extends keyof ProjectMetadata>(key: K, value: ProjectMetadata[K]) {
-    setMetadata((prev) => ({ ...prev, [key]: value }));
-  }
+  // Stable identity — used in effect deps (e.g. share-load restore).
+  // Without useCallback it returned a new ref each render, re-firing the
+  // restore effect and resurrecting deleted tracks from the cache.
+  const updateField = useCallback(
+    <K extends keyof ProjectMetadata>(key: K, value: ProjectMetadata[K]) => {
+      setMetadata((prev) => ({ ...prev, [key]: value }));
+    },
+    [],
+  );
 
   return { metadata, updateField, setMetadata };
 }
