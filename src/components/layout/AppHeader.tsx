@@ -35,7 +35,7 @@ export function AppHeader({
         </button>
       )}
 
-      <div className="daw-logo" aria-hidden="true">M</div>
+      <div className="daw-logo" aria-hidden="true">S</div>
       <span className="daw-header-title shrink-0">SampleMe</span>
       <span className="text-muted-foreground/40 shrink-0">/</span>
 

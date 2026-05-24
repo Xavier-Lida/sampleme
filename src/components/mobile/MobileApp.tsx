@@ -311,7 +311,7 @@ export function MobileApp() {
     <div className="mobile-app">
       {/* Top bar — read-only title display + edit button (opens info sheet) */}
       <header className="mobile-header">
-        <div className="mobile-logo">M</div>
+        <div className="mobile-logo">S</div>
         <div className="mobile-title-display" title={metadata.name || 'Ma mélodie'}>
           {metadata.name?.trim() || 'Ma mélodie'}
         </div>
