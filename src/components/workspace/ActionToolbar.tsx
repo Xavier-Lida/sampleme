@@ -7,6 +7,7 @@ import {
   MicrophoneIcon,
   MusicNotesIcon,
   StopIcon,
+  TrashIcon,
 } from '@phosphor-icons/react';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
@@ -32,6 +33,12 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Spinner } from '@/components/ui/spinner';
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from '@/components/ui/tooltip';
 import {
   getInstrumentLabel,
   type PlaybackInstrumentId,
@@ -117,8 +124,21 @@ export function ActionToolbar({
   }
 
   const actionsDisabled = busy || playing || isRecording;
+  const canClearTrack = hasResult || hasRecording;
+
+  function handleClearTrackClick() {
+    if (
+      !window.confirm(
+        'Effacer l\u2019audio et toutes les notes ? Cette action est irréversible.',
+      )
+    ) {
+      return;
+    }
+    onClearSession();
+  }
 
   return (
+    <TooltipProvider>
     <div className={cn('flex flex-col gap-2', className)}>
       <div className="flex flex-wrap items-center gap-2">
         {!isRecording ? (
@@ -179,6 +199,15 @@ export function ActionToolbar({
           </SelectContent>
         </Select>
 
+        <Button
+          variant="outline"
+          disabled={!canClearTrack || actionsDisabled}
+          onClick={handleClearTrackClick}
+        >
+          <TrashIcon data-icon="inline-start" />
+          Clear track
+        </Button>
+
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <Button variant="ghost" size="icon" aria-label="Plus d'actions">
@@ -187,12 +216,19 @@ export function ActionToolbar({
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end" side="top" sideOffset={8} className="w-56 min-w-48">
             <DropdownMenuGroup>
-              <DropdownMenuItem
-                disabled={!hasSelectedNote || playing}
-                onClick={onDeleteSelected}
-              >
-                Supprimer la note sélectionnée
-              </DropdownMenuItem>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <DropdownMenuItem
+                    disabled={!hasSelectedNote || playing}
+                    onClick={onDeleteSelected}
+                  >
+                    Supprimer la note sélectionnée
+                  </DropdownMenuItem>
+                </TooltipTrigger>
+                <TooltipContent side="left">
+                  Ou sélectionnez une note sur la portée, puis Suppr
+                </TooltipContent>
+              </Tooltip>
               <DropdownMenuItem
                 disabled={!notesEdited || playing}
                 onClick={onResetNotes}
@@ -256,5 +292,6 @@ export function ActionToolbar({
         <p className="text-xs text-muted-foreground">Enregistrement avec métronome…</p>
       )}
     </div>
+    </TooltipProvider>
   );
 }

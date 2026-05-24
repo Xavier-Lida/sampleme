@@ -26,7 +26,8 @@ import {
 import { blobToWav, decodeAudioDuration, extractWaveformPeaks } from '@/lib/audio';
 import {
   addNote,
-  getNextAppendStart,
+  computeTimelineSpan,
+  findNoteAtSlot,
   removeNoteAt,
   sortNotesByStart,
 } from '@/lib/music/note-editing';
@@ -112,18 +113,24 @@ export default function Page() {
   );
 
   const handleStaffClick = useCallback(
-    (pitch: number) => {
+    (pitch: number, start: number) => {
       if (!result) return;
-      const startTime = getNextAppendStart(result.notes);
+      const existingIndex = findNoteAtSlot(result.notes, start, pitch);
+      if (existingIndex !== null) {
+        setSelectedNoteIndex(existingIndex);
+        return;
+      }
       const { notes: updated, selectedIndex } = addNote(result.notes, {
         pitch,
-        start: startTime,
+        start,
         duration: SIXTEENTH_SECONDS,
       });
       updateNotes(updated, selectedIndex);
     },
     [result, updateNotes],
   );
+
+  const timelineSpan = computeTimelineSpan(audioDuration, notes);
 
   const handleResetNotes = useCallback(() => {
     if (!result || !originalNotesRef.current) return;
@@ -223,6 +230,7 @@ export default function Page() {
 
   useEffect(() => {
     function onKeyDown(e: KeyboardEvent) {
+      if (noteEditorOpen) return;
       const tag = document.activeElement?.tagName;
       if (tag === 'INPUT' || tag === 'SELECT' || tag === 'TEXTAREA') return;
       if ((e.key === 'Delete' || e.key === 'Backspace') && selectedNoteIndex !== null && result) {
@@ -232,7 +240,7 @@ export default function Page() {
     }
     window.addEventListener('keydown', onKeyDown);
     return () => window.removeEventListener('keydown', onKeyDown);
-  }, [selectedNoteIndex, result, handleRemoveNote]);
+  }, [selectedNoteIndex, result, handleRemoveNote, noteEditorOpen]);
 
   useEffect(() => {
     if (error) {
@@ -361,6 +369,7 @@ export default function Page() {
 
       <TrackWorkspace
         notes={notes}
+        timelineSpan={timelineSpan}
         peaks={waveformPeaks}
         duration={playback.duration}
         currentTime={playback.currentTime}

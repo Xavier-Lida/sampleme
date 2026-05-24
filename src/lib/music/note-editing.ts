@@ -1,5 +1,8 @@
 import type { Note } from '@/types/transcription';
-import { SIXTEENTH_SECONDS } from '@/types/transcription';
+import { FIXED_BPM, SIXTEENTH_SECONDS } from '@/types/transcription';
+
+export const STAVE_LEFT = 10;
+export const STAVE_Y = 40;
 
 export function quantizeToSixteenth(seconds: number): number {
   return Math.round(seconds / SIXTEENTH_SECONDS) * SIXTEENTH_SECONDS;
@@ -66,8 +69,36 @@ export const DURATION_OPTIONS = [
   { label: 'Quarter', seconds: SIXTEENTH_SECONDS * 4 },
 ] as const;
 
+/** Minimum timeline length: 4 measures at the fixed BPM. */
+export function computeTimelineSpan(audioDuration: number, notes: Note[]): number {
+  const fourMeasures = ((60 / FIXED_BPM) * 4) * 4;
+  const lastEnd = notes.length > 0 ? Math.max(...notes.map((n) => n.end)) : 0;
+  return Math.max(audioDuration, lastEnd, fourMeasures);
+}
+
+export function staffClickToStart(
+  xOnStave: number,
+  staveWidth: number,
+  timelineSpan: number,
+): number {
+  const ratio = Math.max(0, Math.min(1, xOnStave / staveWidth));
+  return quantizeToSixteenth(ratio * timelineSpan);
+}
+
+export function findNoteAtSlot(
+  notes: Note[],
+  start: number,
+  pitch: number,
+): number | null {
+  const halfSlot = SIXTEENTH_SECONDS / 2;
+  const index = notes.findIndex(
+    (n) => n.pitch === pitch && Math.abs(n.start - start) < halfSlot,
+  );
+  return index >= 0 ? index : null;
+}
+
 /** Approximate treble-clef MIDI pitch from a click Y coordinate on the SVG. */
-export function yToMidiPitch(y: number, staveTop = 40): number {
+export function yToMidiPitch(y: number, staveTop = STAVE_Y): number {
   const lineSpacing = 10;
   const middleLineY = staveTop + lineSpacing * 2;
   const halfStepsFromMiddle = (middleLineY - y) / (lineSpacing / 2);

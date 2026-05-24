@@ -12,18 +12,22 @@ import {
 } from 'vexflow';
 import type { Note } from '@/types/transcription';
 import { FIXED_BPM, SIXTEENTH_SECONDS } from '@/types/transcription';
-import { yToMidiPitch } from '@/lib/music/note-editing';
+import {
+  STAVE_LEFT,
+  STAVE_Y,
+  staffClickToStart,
+  yToMidiPitch,
+} from '@/lib/music/note-editing';
 
 interface Props {
   notes: Note[];
   width?: number;
   height?: number;
+  timelineSpan: number;
   selectedIndex?: number | null;
   onNoteSelect?: (index: number) => void;
-  onStaffClick?: (pitch: number) => void;
+  onStaffClick?: (pitch: number, start: number) => void;
 }
-
-const STAVE_Y = 40;
 
 // MIDI pitch → VexFlow key string (e.g. 60 -> "c/4", 61 -> "c#/4")
 const SHARP_PITCH_NAMES = ['c', 'c#', 'd', 'd#', 'e', 'f', 'f#', 'g', 'g#', 'a', 'a#', 'b'];
@@ -48,6 +52,7 @@ export default function SheetMusicRenderer({
   notes,
   width = 800,
   height = 220,
+  timelineSpan,
   selectedIndex = null,
   onNoteSelect,
   onStaffClick,
@@ -55,9 +60,13 @@ export default function SheetMusicRenderer({
   const hostRef = useRef<HTMLDivElement>(null);
   const onNoteSelectRef = useRef(onNoteSelect);
   const onStaffClickRef = useRef(onStaffClick);
+  const timelineSpanRef = useRef(timelineSpan);
 
   onNoteSelectRef.current = onNoteSelect;
   onStaffClickRef.current = onStaffClick;
+  timelineSpanRef.current = timelineSpan;
+
+  const staveWidth = width - 20;
 
   useEffect(() => {
     const host = hostRef.current;
@@ -70,15 +79,13 @@ export default function SheetMusicRenderer({
     const ctx = renderer.getContext();
     const svg = host.querySelector('svg');
 
-    const stave = new Stave(10, STAVE_Y, width - 20);
+    const stave = new Stave(STAVE_LEFT, STAVE_Y, staveWidth);
     stave.addClef('treble').addTimeSignature('4/4');
     stave.setContext(ctx).draw();
 
     const cleanups: Array<() => void> = [];
 
-    if (notes.length === 0) {
-      ctx.setFont('sans-serif', 14).fillText('No notes yet — click the staff to add one.', 30, 100);
-    } else {
+    if (notes.length > 0) {
       const staveNotes = notes.map((n, index) => {
         const { key, needsAccidental } = midiToVexKey(n.pitch);
         const duration = durationToVexFlow(Math.max(n.end - n.start, SIXTEENTH_SECONDS));
@@ -134,7 +141,10 @@ export default function SheetMusicRenderer({
         if (target.closest('.vf-stavenote')) return;
         const rect = svg.getBoundingClientRect();
         const y = e.clientY - rect.top;
-        onStaffClickRef.current?.(yToMidiPitch(y, STAVE_Y));
+        const xOnStave = e.clientX - rect.left - STAVE_LEFT;
+        const pitch = yToMidiPitch(y, STAVE_Y);
+        const start = staffClickToStart(xOnStave, staveWidth, timelineSpanRef.current);
+        onStaffClickRef.current?.(pitch, start);
       };
       svg.addEventListener('click', staffHandler);
       cleanups.push(() => svg.removeEventListener('click', staffHandler));
@@ -143,7 +153,7 @@ export default function SheetMusicRenderer({
     return () => {
       for (const cleanup of cleanups) cleanup();
     };
-  }, [notes, width, height, selectedIndex]);
+  }, [notes, width, height, selectedIndex, staveWidth, timelineSpan]);
 
   return <div ref={hostRef} aria-label="Sheet music" className="sheet-renderer" />;
 }

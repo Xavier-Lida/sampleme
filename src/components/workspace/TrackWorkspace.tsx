@@ -32,7 +32,8 @@ interface TrackWorkspaceProps {
   hasRecording: boolean;
   notesEdited: boolean;
   onNoteSelect: (index: number | null) => void;
-  onStaffClick?: (pitch: number) => void;
+  timelineSpan: number;
+  onStaffClick?: (pitch: number, start: number) => void;
   onSeek: (seconds: number) => void;
   onStartRecording: () => void;
   onStopRecording: () => void;
@@ -66,6 +67,7 @@ export function TrackWorkspace({
   hasRecording,
   notesEdited,
   onNoteSelect,
+  timelineSpan,
   onStaffClick,
   onSeek,
   onStartRecording,
@@ -133,6 +135,7 @@ export function TrackWorkspace({
             <SheetMusicRenderer
               notes={notes}
               width={sheetWidth}
+              timelineSpan={timelineSpan}
               selectedIndex={selectedIndex}
               onNoteSelect={onNoteSelect}
               onStaffClick={hasResult ? onStaffClick : undefined}
