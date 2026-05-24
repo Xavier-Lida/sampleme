@@ -36,13 +36,15 @@ export function ProjectInfoPanel({
   return (
     <div className={cn('w-full', className)}>
       <div className="daw-panel-section">
-        <h2 className="daw-panel-label">Informations de la partition</h2>
-        <p className="text-[10px] text-muted-foreground mb-2 leading-snug">
+        <h2 className="text-base font-bold text-foreground mb-1.5">
+          Informations de la partition
+        </h2>
+        <p className="text-xs text-muted-foreground mb-4 leading-snug">
           Ces champs apparaissent en en-tête de votre partition lors de l&apos;export PDF.
         </p>
 
         <div className="daw-field">
-          <label htmlFor="project-name" className="daw-field-label">Nom</label>
+          <label htmlFor="project-name" className="daw-field-label-strong">Nom</label>
           <input
             id="project-name"
             type="text"
@@ -54,7 +56,7 @@ export function ProjectInfoPanel({
         </div>
 
         <div className="daw-field">
-          <label htmlFor="project-author" className="daw-field-label">Auteur</label>
+          <label htmlFor="project-author" className="daw-field-label-strong">Auteur</label>
           <input
             id="project-author"
             type="text"
@@ -66,7 +68,7 @@ export function ProjectInfoPanel({
         </div>
 
         <div className="daw-field">
-          <span className="daw-field-label">Instruments</span>
+          <span className="daw-field-label-strong">Instruments</span>
           {selected.length > 0 && (
             <p className="text-[10px] text-muted-foreground mb-1.5">
               {selected.join(', ')}

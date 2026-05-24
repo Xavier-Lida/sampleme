@@ -1,8 +1,10 @@
 'use client';
 
 import { useState, type ReactNode } from 'react';
+import { FilePdfIcon } from '@phosphor-icons/react';
 import { AppHeader } from '@/components/layout/AppHeader';
 import { TransportBar } from '@/components/layout/TransportBar';
+import { Button } from '@/components/ui/button';
 import type { ProjectMetadata } from '@/hooks/useProjectMetadata';
 import { cn } from '@/lib/utils';
 
@@ -46,8 +48,6 @@ export function AppShell({
         onFieldChange={onFieldChange}
         showMobileMenu
         onOpenDrawer={() => setPanelOpen((v) => !v)}
-        onExportPdf={onExportPdf}
-        exportPdfDisabled={exportPdfDisabled}
       />
 
       <div className="daw-content">
@@ -55,7 +55,20 @@ export function AppShell({
           className={cn('daw-left', !panelOpen && 'daw-left--hidden')}
           aria-label="Panneau de configuration"
         >
-          {infoPanel}
+          <div className="flex-1 min-h-0 overflow-y-auto">{infoPanel}</div>
+          {onExportPdf && (
+            <div className="daw-sidebar-footer">
+              <Button
+                variant="default"
+                onClick={onExportPdf}
+                disabled={exportPdfDisabled}
+                className="w-full gap-2 h-10"
+              >
+                <FilePdfIcon className="size-4" />
+                Exporter PDF
+              </Button>
+            </div>
+          )}
         </aside>
 
         <main className="daw-main">

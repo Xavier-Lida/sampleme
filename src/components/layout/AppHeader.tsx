@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useRef, useEffect } from 'react';
-import { FilePdfIcon, PencilSimpleIcon } from '@phosphor-icons/react';
+import { PencilSimpleIcon } from '@phosphor-icons/react';
 import { Button } from '@/components/ui/button';
 import {
   Popover,
@@ -26,8 +26,6 @@ interface AppHeaderProps {
   ) => void;
   showMobileMenu?: boolean;
   onOpenDrawer?: () => void;
-  onExportPdf?: () => void;
-  exportPdfDisabled?: boolean;
 }
 
 export function AppHeader({
@@ -36,8 +34,6 @@ export function AppHeader({
   onFieldChange,
   showMobileMenu,
   onOpenDrawer,
-  onExportPdf,
-  exportPdfDisabled,
 }: AppHeaderProps) {
   const [editingTitle, setEditingTitle] = useState(false);
   const titleInputRef = useRef<HTMLInputElement>(null);
@@ -127,26 +123,6 @@ export function AppHeader({
         )}
       </div>
 
-      {onExportPdf && (
-        <Tooltip>
-          <TooltipTrigger asChild>
-            <Button
-              variant="default"
-              size="sm"
-              aria-label="Exporter la partition en PDF"
-              onClick={onExportPdf}
-              disabled={exportPdfDisabled}
-              className="ml-auto shrink-0 gap-1.5 h-8"
-            >
-              <FilePdfIcon className="size-4" />
-              <span className="hidden sm:inline">Exporter PDF</span>
-            </Button>
-          </TooltipTrigger>
-          <TooltipContent>
-            Génère un PDF avec le titre, l&apos;auteur et la partition
-          </TooltipContent>
-        </Tooltip>
-      )}
     </header>
   );
 }
