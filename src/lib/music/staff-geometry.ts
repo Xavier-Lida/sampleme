@@ -36,10 +36,27 @@ export function splitNoteForPiano(pitch: number): ClefKind {
   return pitch >= MIDDLE_C_MIDI ? 'treble' : 'bass';
 }
 
+const MIDI_TO_DIATONIC_STEP = [0, 0, 1, 1, 2, 3, 3, 4, 4, 5, 5, 6]; // C C# D D# E F F# G G# A A# B
+const DIATONIC_TO_MIDI_STEP = [0, 2, 4, 5, 7, 9, 11]; // C D E F G A B
+
+export function midiToDiatonic(midi: number): number {
+  const octave = Math.floor(midi / 12) - 1;
+  const noteInOctave = ((midi % 12) + 12) % 12;
+  const step = MIDI_TO_DIATONIC_STEP[noteInOctave];
+  return octave * 7 + step;
+}
+
+export function diatonicToMidi(diatonic: number, min = PIANO_PITCH_MIN, max = PIANO_PITCH_MAX): number {
+  const octave = Math.floor(diatonic / 7);
+  const step = ((diatonic % 7) + 7) % 7;
+  const midi = (octave + 1) * 12 + DIATONIC_TO_MIDI_STEP[step];
+  return Math.max(min, Math.min(max, midi));
+}
+
 export function midiToY(midi: number, staveTop: number, clef: ClefKind): number {
   const middleLineY = staveTop + LINE_SPACING * 2;
-  const halfStepsFromMiddle = midi - CLEF_MIDDLE_MIDI[clef];
-  return middleLineY - halfStepsFromMiddle * (LINE_SPACING / 2);
+  const diatonicDiff = midiToDiatonic(midi) - midiToDiatonic(CLEF_MIDDLE_MIDI[clef]);
+  return middleLineY - diatonicDiff * (LINE_SPACING / 2);
 }
 
 export function pitchToGrandStaffY(pitch: number): number {
@@ -56,9 +73,9 @@ export function yToMidiPitch(
   max = PIANO_PITCH_MAX,
 ): number {
   const middleLineY = staveTop + LINE_SPACING * 2;
-  const halfStepsFromMiddle = (middleLineY - y) / (LINE_SPACING / 2);
-  const midi = Math.round(CLEF_MIDDLE_MIDI[clef] + halfStepsFromMiddle);
-  return Math.max(min, Math.min(max, midi));
+  const diatonicDiff = Math.round((middleLineY - y) / (LINE_SPACING / 2));
+  const targetDiatonic = midiToDiatonic(CLEF_MIDDLE_MIDI[clef]) + diatonicDiff;
+  return diatonicToMidi(targetDiatonic, min, max);
 }
 
 export function yToGrandStaffPitch(

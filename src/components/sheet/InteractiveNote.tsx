@@ -2,7 +2,13 @@
 
 import { useRef, useState } from 'react';
 import type { ClefKind } from '@/lib/music/staff-geometry';
-import { needsSharp, stemUp } from '@/lib/music/staff-geometry';
+import {
+  needsSharp,
+  stemUp,
+  TREBLE_STAVE_Y,
+  BASS_STAVE_Y,
+  LINE_SPACING,
+} from '@/lib/music/staff-geometry';
 
 const DRAG_THRESHOLD = 4;
 const NOTE_RX = 5.5;
@@ -96,6 +102,24 @@ export function InteractiveNote({
   const stemY1 = up ? displayY - 2 : displayY + 2;
   const stemY2 = up ? displayY - STEM_LENGTH : displayY + STEM_LENGTH;
 
+  // Compute ledger lines outside the 5-line staff using proper geometry constants
+  const ledgerLines: number[] = [];
+  const staveTop = clef === 'treble' ? TREBLE_STAVE_Y : BASS_STAVE_Y;
+  const staffBottom = staveTop + 4 * LINE_SPACING; // 5 lines → 4 gaps
+  const firstAbove = staveTop - LINE_SPACING;       // one line above top
+  const firstBelow = staffBottom + LINE_SPACING;    // one line below bottom
+
+  if (displayY <= firstAbove) {
+    for (let ly = firstAbove; ly >= displayY - 1; ly -= LINE_SPACING) {
+      ledgerLines.push(ly);
+    }
+  }
+  if (displayY >= firstBelow) {
+    for (let ly = firstBelow; ly <= displayY + 1; ly += LINE_SPACING) {
+      ledgerLines.push(ly);
+    }
+  }
+
   return (
     <g
       className={`sheet-note${selected ? ' sheet-note--selected' : ''}`}
@@ -113,6 +137,17 @@ export function InteractiveNote({
         height={28}
         fill="transparent"
       />
+      {ledgerLines.map((ly) => (
+        <line
+          key={ly}
+          x1={x - 10}
+          y1={ly}
+          x2={x + 10}
+          y2={ly}
+          stroke={stroke}
+          strokeWidth="1.2"
+        />
+      ))}
       {sharp && (
         <text
           x={x - 14}
