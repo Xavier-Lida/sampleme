@@ -11,7 +11,15 @@ import {
   StopIcon,
   ArrowClockwiseIcon,
   FilePdfIcon,
+  PencilSimpleIcon,
 } from '@phosphor-icons/react';
+import {
+  Sheet,
+  SheetContent,
+  SheetHeader,
+  SheetTitle,
+} from '@/components/ui/sheet';
+import { ProjectInfoPanel } from '@/components/project/ProjectInfoPanel';
 import { useAudioRecorder } from '@/hooks/useAudioRecorder';
 import { useAudioTracks } from '@/hooks/useAudioTracks';
 import { useMelodyPlayback } from '@/hooks/useMelodyPlayback';
@@ -112,6 +120,7 @@ export function MobileApp() {
   const [apiError, setApiError] = useState<string | null>(null);
   const [recStartTs, setRecStartTs] = useState<number>(0);
   const [recElapsed, setRecElapsed] = useState<number>(0);
+  const [infoOpen, setInfoOpen] = useState(false);
 
   const { start, stop, status, error, isRecording, analyserRef } = useAudioRecorder({
     click: false,
@@ -249,17 +258,31 @@ export function MobileApp() {
 
   return (
     <div className="mobile-app">
-      {/* Top bar — minimal: logo + editable title */}
+      {/* Top bar — read-only title display + edit button (opens info sheet) */}
       <header className="mobile-header">
         <div className="mobile-logo">M</div>
-        <input
-          type="text"
-          value={metadata.name}
-          onChange={(e) => updateField('name', e.target.value)}
-          placeholder="Ma mélodie"
-          className="mobile-title-input"
-        />
+        <div className="mobile-title-display" title={metadata.name || 'Ma mélodie'}>
+          {metadata.name?.trim() || 'Ma mélodie'}
+        </div>
+        <button
+          type="button"
+          onClick={() => setInfoOpen(true)}
+          aria-label="Modifier les infos de la partition"
+          className="mobile-header-edit-btn"
+        >
+          <PencilSimpleIcon size={18} />
+        </button>
       </header>
+
+      {/* Edit sheet — same ProjectInfoPanel as desktop sidebar */}
+      <Sheet open={infoOpen} onOpenChange={setInfoOpen}>
+        <SheetContent side="bottom" className="rounded-t-2xl max-h-[80vh] overflow-y-auto">
+          <SheetHeader>
+            <SheetTitle>Informations de la partition</SheetTitle>
+          </SheetHeader>
+          <ProjectInfoPanel metadata={metadata} onFieldChange={updateField} />
+        </SheetContent>
+      </Sheet>
 
       {/* Body — switches per stage */}
       <main className="mobile-body">

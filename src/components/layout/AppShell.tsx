@@ -12,10 +12,6 @@ interface AppShellProps {
   children: ReactNode;
   infoPanel: ReactNode;
   metadata: ProjectMetadata;
-  onFieldChange: <K extends keyof ProjectMetadata>(
-    key: K,
-    value: ProjectMetadata[K],
-  ) => void;
   onExportPdf?: () => void;
   exportPdfDisabled?: boolean;
   onShare?: () => void;
@@ -36,7 +32,6 @@ export function AppShell({
   children,
   infoPanel,
   metadata,
-  onFieldChange,
   onExportPdf,
   exportPdfDisabled,
   onShare,
@@ -49,7 +44,6 @@ export function AppShell({
     <div className="app-shell">
       <AppHeader
         metadata={metadata}
-        onFieldChange={onFieldChange}
         showMobileMenu
         onOpenDrawer={() => setPanelOpen((v) => !v)}
       />

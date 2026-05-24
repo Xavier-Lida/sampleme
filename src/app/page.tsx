@@ -658,7 +658,6 @@ function DesktopPage() {
   return (
     <AppShell
       metadata={metadata}
-      onFieldChange={updateField}
       onExportPdf={handleExportPdf}
       exportPdfDisabled={displayNotes.length === 0 || busy || isRecording}
       onShare={handleShare}
