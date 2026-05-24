@@ -151,9 +151,12 @@ export default function SheetMusicRenderer({
   );
 
   const makeYToPitch = useCallback(
-    (svg: SVGSVGElement, notationKind: ReturnType<typeof getNotationKind>, instrumentId: PlaybackInstrumentId) => {
+    (notationKind: ReturnType<typeof getNotationKind>, instrumentId: PlaybackInstrumentId) => {
       const def = getInstrumentDefinition(instrumentId);
+      // Resolved at call time — svgRef may not be attached during initial render.
       return (clientY: number) => {
+        const svg = svgRef.current;
+        if (!svg) return 60;
         const y = clientYToSvgY(svg, clientY) - offsetY;
         if (notationKind === 'tab') {
           return yToGuitarMidi(y, tabTop);
@@ -257,9 +260,6 @@ export default function SheetMusicRenderer({
   }
 
   function renderNotes() {
-    const svg = svgRef.current;
-    if (!svg) return null;
-
     return displayNotes.map((d) => {
       const key = noteKey(d);
       const pitch = previewPitches[key] ?? d.note.pitch;
@@ -296,7 +296,7 @@ export default function SheetMusicRenderer({
                 clientY,
               )
             }
-            yToPitch={makeYToPitch(svg, notationKind, d.instrument)}
+            yToPitch={makeYToPitch(notationKind, d.instrument)}
           />
         );
       }
@@ -313,7 +313,7 @@ export default function SheetMusicRenderer({
           clef={clef}
           selected={selected}
           noteColor={d.color}
-          yToPitch={makeYToPitch(svg, notationKind, d.instrument)}
+          yToPitch={makeYToPitch(notationKind, d.instrument)}
           onPitchPreview={(p) =>
             setPreviewPitches((prev) => ({ ...prev, [key]: p }))
           }
@@ -354,6 +354,7 @@ export default function SheetMusicRenderer({
         className="sheet-renderer-svg"
         aria-label="Partition"
         onClick={handleStaffBackgroundClick}
+        onContextMenu={(e) => e.preventDefault()}
         style={{ cursor: onStaffClick ? 'crosshair' : 'default' }}
       >
         <rect width={sheetWidth} height={height} fill="#fff" />

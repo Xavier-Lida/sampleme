@@ -64,6 +64,27 @@ export interface DecodedShare {
   tracks: CachedTrack[];
 }
 
+// Fake peaks generated from the note list so shared tracks (no audio) still
+// show a recognizable "waveform" in the lane instead of a dead flat line.
+function synthesizePeaksFromNotes(notes: Note[], peakCount = 256): number[] {
+  if (notes.length === 0) return [];
+  const totalDuration = Math.max(...notes.map((n) => n.end));
+  if (totalDuration <= 0) return [];
+  const peaks: number[] = new Array(peakCount).fill(0);
+  for (const n of notes) {
+    const startIdx = Math.floor((n.start / totalDuration) * peakCount);
+    const endIdx = Math.ceil((n.end / totalDuration) * peakCount);
+    const span = Math.max(1, endIdx - startIdx);
+    for (let i = startIdx; i < endIdx && i < peakCount; i++) {
+      const localT = (i - startIdx) / span;
+      // Soft attack + linear decay shape — gives each note a visible "bump".
+      const env = Math.min(1, localT * 6) * (1 - localT * 0.55);
+      peaks[i] = Math.max(peaks[i], 0.25 + env * 0.5);
+    }
+  }
+  return peaks;
+}
+
 export function decodeShareFromHash(hash: string): DecodedShare | null {
   if (!hash || !hash.startsWith('#')) return null;
   const params = new URLSearchParams(hash.slice(1));
@@ -84,7 +105,7 @@ export function decodeShareFromHash(hash: string): DecodedShare | null {
         hidden: t.hidden,
         notes: t.notes,
         rawNotes: t.notes,
-        peaks: [],
+        peaks: synthesizePeaksFromNotes(t.notes),
         duration: t.notes.length > 0 ? Math.max(...t.notes.map((n) => n.end)) : 0,
       })),
     };
